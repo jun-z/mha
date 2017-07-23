@@ -1,6 +1,8 @@
+import math
 import torch
 import torch.nn as nn
 import torch.nn.init as init
+import torch.autograd as autograd
 
 
 class Linear(nn.Module):
@@ -115,6 +117,25 @@ class MultiHeadAttention(nn.Module):
         output = self.dropout(output)
 
         return self.norm(output + residual), attn
+
+
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_m, length):
+        super(PositionalEncoding, self).__init__()
+
+        encodings = torch.zeros(length, d_m)
+        for i in range(d_m):
+            for j in range(length):
+                if i % 2 == 0:
+                    e = math.sin(float(j) / (10000. ** (i / float(d_m))))
+                else:
+                    e = math.cos(float(j) / (10000. ** ((i - 1) / float(d_m))))
+                encodings[j, i] = e
+
+        self.encodings = autograd.Variable(encodings, requires_grad=False)
+
+    def forward(self, _input):
+        return _input + self.encodings.expand_as(_input)
 
 
 class PositionWiseFeedForward(nn.Module):
